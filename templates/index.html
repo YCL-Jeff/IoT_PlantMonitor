@@ -3,105 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Plant Monitor v9.2</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <title>Plant Monitor v9.3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
 
     <style>
         :root { 
-            --bg: #121212; 
+            --bg: #0f0f11; 
+            --card-bg: rgba(255, 255, 255, 0.03);
             --text: #ffffff; 
-            --sub: #a0a0a0;
+            --sub: #9ca3af;
             
-            /* 核心顏色 */
-            --c-blue:   #3498db; 
-            --c-green:  #2ecc71; 
-            --c-yellow: #f1c40f; 
-            --c-red:    #e74c3c; 
+            /* 狀態色票 */
+            --c-blue:   #38bdf8; /* <20 */
+            --c-green:  #4ade80; /* 20-25 */
+            --c-yellow: #facc15; /* 25-28 */
+            --c-red:    #f87171; /* >28 */
+            
+            /* 圖表主線顏色 (電光紫 - 與狀態色區隔) */
+            --c-chart-line: #c084fc; 
+            --c-chart-fill: rgba(192, 132, 252, 0.15);
         }
         
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; min-height: 100vh; }
-        .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; }
-        .card { border-radius: 30px; padding: 35px 25px; position: relative; margin-bottom: 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.5s ease; }
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: radial-gradient(circle at 50% 0%, #1e1e24 0%, var(--bg) 100%); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh; 
+            -webkit-font-smoothing: antialiased;
+        }
         
-        /* 卡片顏色樣式 */
-        .card.level-FREEZE, .card.level-COLD { border-color: var(--c-blue); box-shadow: 0 0 30px rgba(52, 152, 219, 0.2); }
-        .card.level-FREEZE .temp-val, .card.level-COLD .temp-val { color: var(--c-blue); }
+        .container { max-width: 500px; margin: 0 auto; padding-bottom: 40px; }
 
-        .card.level-BEST, .card.level-GOOD { border-color: var(--c-green); box-shadow: 0 0 30px rgba(46, 204, 113, 0.2); }
-        .card.level-BEST .temp-val, .card.level-GOOD .temp-val { color: var(--c-green); }
+        /* --- 主卡片設計 --- */
+        .card { 
+            border-radius: 28px; 
+            padding: 30px; 
+            position: relative; 
+            margin-bottom: 24px; 
+            background: var(--card-bg); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(12px); 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        }
 
-        .card.level-WARN { border-color: var(--c-yellow); animation: breathe 3s infinite; box-shadow: 0 0 30px rgba(241, 196, 15, 0.2); }
-        .card.level-WARN .temp-val { color: var(--c-yellow); }
+        /* 狀態邊框與光暈 */
+        .card.level-FREEZE, .card.level-COLD { border-color: var(--c-blue); box-shadow: 0 0 40px rgba(56, 189, 248, 0.15); }
+        .card.level-FREEZE .temp-val, .card.level-COLD .temp-val { text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
 
-        .card.level-DANGER { border-color: var(--c-red); animation: pulse 0.8s infinite; box-shadow: 0 0 40px rgba(231, 76, 60, 0.4); }
-        .card.level-DANGER .temp-val { color: var(--c-red); }
+        .card.level-BEST, .card.level-GOOD { border-color: var(--c-green); box-shadow: 0 0 40px rgba(74, 222, 128, 0.15); }
+        .card.level-BEST .temp-val, .card.level-GOOD .temp-val { text-shadow: 0 0 20px rgba(74, 222, 128, 0.4); }
 
-        .card.level-NORMAL { border-color: var(--sub); }
+        .card.level-WARN { border-color: var(--c-yellow); box-shadow: 0 0 40px rgba(250, 204, 21, 0.15); animation: breathe 3s infinite; }
+        .card.level-WARN .temp-val { text-shadow: 0 0 20px rgba(250, 204, 21, 0.4); }
 
-        @keyframes breathe { 0%, 100% { opacity: 1; border-color: var(--c-yellow); } 50% { opacity: 0.8; border-color: rgba(241, 196, 15, 0.4); } }
-        @keyframes pulse { 0% { transform: scale(1); border-color: var(--c-red); } 50% { transform: scale(1.01); border-color: rgba(231, 76, 60, 0.5); } 100% { transform: scale(1); border-color: var(--c-red); } }
+        .card.level-DANGER { border-color: var(--c-red); box-shadow: 0 0 50px rgba(248, 113, 113, 0.25); animation: pulse 1s infinite; }
+        .card.level-DANGER .temp-val { text-shadow: 0 0 30px rgba(248, 113, 113, 0.6); }
+        
+        @keyframes breathe { 0%, 100% { border-color: var(--c-yellow); opacity: 1; } 50% { border-color: rgba(250, 204, 21, 0.5); opacity: 0.9; } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); border-color: var(--c-red); } 50% { transform: scale(1.01); border-color: rgba(248, 113, 113, 0.6); } }
 
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; opacity: 0.8; }
-        .title { font-weight: 700; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; color: var(--sub); }
-        .status-pill { font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sub); }
-        .dot.online { background: var(--c-green); box-shadow: 0 0 8px var(--c-green); }
-        .latency-msg { font-size: 0.65rem; color: #888; margin-left: 5px; font-weight: 400; }
+        /* --- Header & Status --- */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .title { font-weight: 800; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sub); }
+        .status-pill { 
+            background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 20px; 
+            font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #444; transition: 0.3s; }
+        .dot.online { background: var(--c-green); box-shadow: 0 0 6px var(--c-green); }
+        .latency-msg { color: #666; font-weight: 400; margin-left: 4px; }
 
-        .main-display { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 25px 0; }
-        .temp-group { text-align: right; }
-        .temp-val { font-size: 5.5rem; font-weight: 800; line-height: 1; letter-spacing: -3px; }
-        .unit { font-size: 1.5rem; font-weight: 500; color: var(--sub); vertical-align: top; margin-left: 2px; }
+        /* --- Main Temperature --- */
+        .main-display { text-align: center; margin: 10px 0 30px 0; }
+        .temp-wrapper { display: inline-flex; align-items: flex-start; justify-content: center; }
+        .temp-val { font-size: 6rem; font-weight: 700; line-height: 1; letter-spacing: -3px; color: #fff; transition: color 0.3s; }
+        .unit { font-size: 1.5rem; font-weight: 500; color: var(--sub); margin-top: 10px; margin-left: 4px; }
+        .guard-msg { font-size: 0.9rem; color: var(--sub); margin-top: 8px; font-weight: 500; letter-spacing: 0.5px; }
 
-        .extremes-stack { display: flex; flex-direction: column; gap: 15px; align-items: flex-start; }
-        .ex-item { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
-        .ex-label { font-size: 0.7rem; font-weight: 700; color: var(--sub); letter-spacing: 0.5px; margin-bottom: 2px; }
-        .ex-val { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
-        .max-txt { color: var(--c-red); }
-        .min-txt { color: var(--c-blue); }
+        /* --- Info Grid (4格排版) --- */
+        .info-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; 
+            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .info-item { display: flex; flex-direction: column; align-items: center; padding: 5px; }
+        .info-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--sub); margin-bottom: 4px; }
+        .info-value { font-size: 1.1rem; font-weight: 600; color: #fff; }
+        .val-danger { color: var(--c-red); } .val-cold { color: var(--c-blue); }
 
-        .msg-box { text-align: center; min-height: 1.2rem; font-size: 0.95rem; font-weight: 500; color: var(--sub); margin-bottom: 5px; letter-spacing: 0.3px; }
-        .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .stat-item { display: flex; flex-direction: column; align-items: center; }
-        .stat-lbl { font-size: 0.65rem; color: var(--sub); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-        .stat-val { font-size: 1.1rem; font-weight: 600; color: #fff; }
-
-        .chart-box { background: rgba(255, 255, 255, 0.03); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        .time-controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: rgba(0, 0, 0, 0.3); padding: 3px; border-radius: 10px; margin-bottom: 15px; }
-        .time-btn { border: none; background: transparent; padding: 6px 0; font-size: 0.75rem; font-weight: 600; color: var(--sub); cursor: pointer; border-radius: 7px; transition: 0.2s; }
+        /* --- Chart Section --- */
+        .chart-card { 
+            background: var(--card-bg); border-radius: 28px; padding: 20px; 
+            border: 1px solid rgba(255,255,255,0.05); 
+        }
+        
+        .time-controls { 
+            display: flex; justify-content: space-between; background: rgba(0, 0, 0, 0.3); 
+            padding: 4px; border-radius: 12px; margin-bottom: 20px; 
+        }
+        .time-btn { 
+            flex: 1; border: none; background: transparent; padding: 8px 0; 
+            font-size: 0.75rem; font-weight: 600; color: #666; cursor: pointer; 
+            border-radius: 8px; transition: 0.2s; 
+        }
         .time-btn.active { background: rgba(255, 255, 255, 0.1); color: #fff; }
-        .chart-container { position: relative; height: 300px; width: 100%; }
-        .chart-footer { margin-top: 15px; text-align: center; font-size: 0.7rem; color: var(--sub); font-weight: 500; }
+        
+        .chart-container { position: relative; height: 280px; width: 100%; }
+        .footer-info { text-align: center; margin-top: 20px; font-size: 0.7rem; color: #444; }
     </style>
 </head>
 <body>
     <div class="container">
+        
         <div class="card level-NORMAL" id="mainCard">
             <div class="header">
-                <div class="title">Plant Monitor</div>
+                <div class="title">Monitor v9.3</div>
                 <div class="status-pill">
                     <div id="dot" class="dot"></div>
                     <span id="conn">Wait...</span>
                     <span id="latency" class="latency-msg"></span>
                 </div>
             </div>
-            <div id="guardMsg" class="msg-box">Loading...</div>
+
             <div class="main-display">
-                <div class="temp-group"><span id="temp" class="temp-val">--</span><span class="unit">°C</span></div>
-                <div class="extremes-stack">
-                    <div class="ex-item"><span class="ex-label">MAX</span><span id="max24" class="ex-val max-txt">--</span></div>
-                    <div class="ex-item"><span class="ex-label">MIN</span><span id="min24" class="ex-val min-txt">--</span></div>
+                <div class="temp-wrapper">
+                    <span id="temp" class="temp-val">--</span>
+                    <span class="unit">°C</span>
+                </div>
+                <div id="guardMsg" class="guard-msg">System Initializing...</div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Humidity</span>
+                    <span class="info-value"><span id="humi">--</span>%</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Daily Swing</span>
+                    <span class="info-value" id="swing24">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Max (24h)</span>
+                    <span class="info-value val-danger" id="max24">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Min (24h)</span>
+                    <span class="info-value val-cold" id="min24">--</span>
                 </div>
             </div>
-            <div class="footer-grid">
-                <div class="stat-item"><span class="stat-lbl">Humidity</span><span class="stat-val"><span id="humi">--</span>%</span></div>
-                <div class="stat-item"><span class="stat-lbl">Daily Swing</span><span class="stat-val" id="swing24">--</span></div>
-            </div>
         </div>
-        <div class="chart-box">
+
+        <div class="chart-card">
             <div class="time-controls">
                 <button onclick="changeRange('1h', this)" class="time-btn active">1H</button>
                 <button onclick="changeRange('6h', this)" class="time-btn">6H</button>
@@ -109,10 +166,14 @@
                 <button onclick="changeRange('24h', this)" class="time-btn">24H</button>
                 <button onclick="changeRange('7d', this)" class="time-btn">7D</button>
             </div>
-            <div class="chart-container"><canvas id="chart"></canvas></div>
-            <div class="chart-footer">Run Time: <span id="uptime">0m</span></div>
+            <div class="chart-container">
+                <canvas id="chart"></canvas>
+            </div>
+            <div class="footer-info">Uptime: <span id="uptime">0m</span></div>
         </div>
+
     </div>
+
     <script>
         let chart; let currentRange = '1h'; let lastTs = 0;
         window.onload = function() { initChart(); loop(); setInterval(updateLatency, 1000); };
@@ -121,31 +182,30 @@
             if(lastTs === 0) return;
             const sec = Math.floor((Date.now()/1000) - lastTs);
             const el = document.getElementById('latency');
-            el.innerText = sec + "s ago";
-            if(sec > 10) el.style.color = '#e74c3c'; else el.style.color = '#888';
+            el.innerText = sec + "s";
+            if(sec > 10) el.style.color = '#f87171'; else el.style.color = '#666';
         }
 
         function initChart() {
             const ctx = document.getElementById('chart').getContext('2d');
             
+            // 建立漸層填充色
+            let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(192, 132, 252, 0.25)'); // 上方深紫
+            gradient.addColorStop(1, 'rgba(192, 132, 252, 0.0)');  // 下方透明
+
             const annotations = {
                 dangerLine: {
-                    type: 'line', yMin: 28, yMax: 28, borderColor: '#e74c3c', borderWidth: 1.5, borderDash: [6, 4],
-                    // ★ 關鍵修正：不影響縮放範圍
-                    adjustScaleRange: false,
-                    label: { display: true, content: 'Danger (28°C)', position: 'start', color: '#e74c3c', font: { size: 10 }, backgroundColor: 'rgba(0,0,0,0.5)' }
+                    type: 'line', yMin: 28, yMax: 28, borderColor: '#f87171', borderWidth: 1, borderDash: [4, 4], adjustScaleRange: false,
+                    label: { display: true, content: '28°C', position: 'end', color: '#f87171', font: { size: 9 }, backgroundColor: 'transparent', yAdjust: -10 }
                 },
                 warnLine: {
-                    type: 'line', yMin: 25, yMax: 25, borderColor: '#f1c40f', borderWidth: 1.5, borderDash: [6, 4],
-                    // ★ 關鍵修正：不影響縮放範圍
-                    adjustScaleRange: false,
-                    label: { display: true, content: 'Warning (25°C)', position: 'start', color: '#f1c40f', font: { size: 10 }, backgroundColor: 'rgba(0,0,0,0.5)' }
+                    type: 'line', yMin: 25, yMax: 25, borderColor: '#facc15', borderWidth: 1, borderDash: [4, 4], adjustScaleRange: false,
+                    label: { display: true, content: '25°C', position: 'end', color: '#facc15', font: { size: 9 }, backgroundColor: 'transparent', yAdjust: -10 }
                 },
                 coldLine: {
-                    type: 'line', yMin: 20, yMax: 20, borderColor: '#3498db', borderWidth: 1.5, borderDash: [6, 4],
-                    // ★ 關鍵修正：不影響縮放範圍
-                    adjustScaleRange: false,
-                    label: { display: true, content: 'Cold (20°C)', position: 'start', color: '#3498db', font: { size: 10 }, backgroundColor: 'rgba(0,0,0,0.5)' }
+                    type: 'line', yMin: 20, yMax: 20, borderColor: '#38bdf8', borderWidth: 1, borderDash: [4, 4], adjustScaleRange: false,
+                    label: { display: true, content: '20°C', position: 'end', color: '#38bdf8', font: { size: 9 }, backgroundColor: 'transparent', yAdjust: -10 }
                 }
             };
 
@@ -154,35 +214,35 @@
                 data: { labels: [], datasets: [{ 
                     label: 'Temp', 
                     data: [], 
-                    borderColor: '#ffffff', 
-                    borderWidth: 2.5, 
+                    // ★ 曲線顏色：電光紫 ★
+                    borderColor: '#c084fc', 
+                    borderWidth: 3, 
+                    // ★ 平滑曲線 ★
+                    tension: 0.4, 
                     pointRadius: 0, 
-                    cubicInterpolationMode: 'monotone', 
-                    fill: false 
+                    // ★ 漸層填充 ★
+                    backgroundColor: gradient,
+                    fill: true 
                 }] }, 
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false, 
                     plugins: { 
                         legend: { display: false },
-                        annotation: { 
-                            // 允許線條畫在圖表區之外 (才不會被切斷，但不會強迫縮放)
-                            clip: false,
-                            annotations: annotations 
-                        }
+                        annotation: { clip: false, annotations: annotations }
                     }, 
                     animation: false, 
                     scales: { 
                         x: { 
                             display: true, 
                             grid: { display: false }, 
-                            ticks: { color: '#888', font: { size: 9 }, maxTicksLimit: 6, maxRotation: 0 } 
+                            ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 5, maxRotation: 0 } 
                         }, 
                         y: { 
-                            // 自動縮放，上下各留 30% 緩衝空間，讓線條在中間漂亮波動
-                            grace: '30%',
-                            grid: { color: 'rgba(255,255,255,0.08)' }, 
-                            ticks: { color: '#888', font: { size: 10 } } 
+                            // 自動縮放，線條留白，不被虛線綁架
+                            grace: '20%',
+                            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, 
+                            ticks: { color: '#666', font: { size: 10 } } 
                         } 
                     } 
                 } 
@@ -204,7 +264,8 @@
 
                 const swingElem = document.getElementById('swing24');
                 swingElem.innerText = data.swing_24h + (data.swing_24h !== '--' ? '°C' : '');
-                swingElem.style.color = '#fff';
+                if(data.swing_24h !== '--' && parseFloat(data.swing_24h) > 5) swingElem.style.color = '#facc15';
+                else swingElem.style.color = '#fff';
 
                 const dot = document.getElementById('dot');
                 if(data.status === "Online") { dot.classList.add('online'); document.getElementById('conn').innerText="Online"; } else { dot.classList.remove('online'); document.getElementById('conn').innerText=data.status; }
