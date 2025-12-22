@@ -67,8 +67,7 @@ v8.5 版本更新 | 高精度數據核心 • 專業抗噪演算法
 
 ### 🌐 遠端連線 (Cloudflare Tunnel)
 執行以下指令穿透防火牆：
-```
-bash
+```bash
 cloudflared tunnel --protocol http2 --url http://localhost:5555
 ```
 
