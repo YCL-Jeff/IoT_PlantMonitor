@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plant Monitor v9.2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+
+    <style>
+        :root { 
+            --bg: #121212; 
+            --text: #ffffff; 
+            --sub: #a0a0a0;
+            
+            /* 核心顏色 */
+            --c-blue:   #3498db; 
+            --c-green:  #2ecc71; 
+            --c-yellow: #f1c40f; 
+            --c-red:    #e74c3c; 
+        }
+        
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; min-height: 100vh; }
+        .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; }
+        .card { border-radius: 30px; padding: 35px 25px; position: relative; margin-bottom: 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.5s ease; }
+        
+        /* 卡片顏色樣式 */
+        .card.level-FREEZE, .card.level-COLD { border-color: var(--c-blue); box-shadow: 0 0 30px rgba(52, 152, 219, 0.2); }
+        .card.level-FREEZE .temp-val, .card.level-COLD .temp-val { color: var(--c-blue); }
+
+        .card.level-BEST, .card.level-GOOD { border-color: var(--c-green); box-shadow: 0 0 30px rgba(46, 204, 113, 0.2); }
+        .card.level-BEST .temp-val, .card.level-GOOD .temp-val { color: var(--c-green); }
+
+        .card.level-WARN { border-color: var(--c-yellow); animation: breathe 3s infinite; box-shadow: 0 0 30px rgba(241, 196, 15, 0.2); }
+        .card.level-WARN .temp-val { color: var(--c-yellow); }
+
+        .card.level-DANGER { border-color: var(--c-red); animation: pulse 0.8s infinite; box-shadow: 0 0 40px rgba(231, 76, 60, 0.4); }
+        .card.level-DANGER .temp-val { color: var(--c-red); }
+
+        .card.level-NORMAL { border-color: var(--sub); }
+
+        @keyframes breathe { 0%, 100% { opacity: 1; border-color: var(--c-yellow); } 50% { opacity: 0.8; border-color: rgba(241, 196, 15, 0.4); } }
+        @keyframes pulse { 0% { transform: scale(1); border-color: var(--c-red); } 50% { transform: scale(1.01); border-color: rgba(231, 76, 60, 0.5); } 100% { transform: scale(1); border-color: var(--c-red); } }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; opacity: 0.8; }
+        .title { font-weight: 700; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; color: var(--sub); }
+        .status-pill { font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sub); }
+        .dot.online { background: var(--c-green); box-shadow: 0 0 8px var(--c-green); }
+        .latency-msg { font-size: 0.65rem; color: #888; margin-left: 5px; font-weight: 400; }
+
+        .main-display { display: flex; align-items: center; justify-content: center; gap: 30px; margin: 25px 0; }
+        .temp-group { text-align: right; }
+        .temp-val { font-size: 5.5rem; font-weight: 800; line-height: 1; letter-spacing: -3px; }
+        .unit { font-size: 1.5rem; font-weight: 500; color: var(--sub); vertical-align: top; margin-left: 2px; }
+
+        .extremes-stack { display: flex; flex-direction: column; gap: 15px; align-items: flex-start; }
+        .ex-item { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+        .ex-label { font-size: 0.7rem; font-weight: 700; color: var(--sub); letter-spacing: 0.5px; margin-bottom: 2px; }
+        .ex-val { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
+        .max-txt { color: var(--c-red); }
+        .min-txt { color: var(--c-blue); }
+
+        .msg-box { text-align: center; min-height: 1.2rem; font-size: 0.95rem; font-weight: 500; color: var(--sub); margin-bottom: 5px; letter-spacing: 0.3px; }
+        .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-lbl { font-size: 0.65rem; color: var(--sub); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .stat-val { font-size: 1.1rem; font-weight: 600; color: #fff; }
+
+        .chart-box { background: rgba(255, 255, 255, 0.03); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .time-controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: rgba(0, 0, 0, 0.3); padding: 3px; border-radius: 10px; margin-bottom: 15px; }
+        .time-btn { border: none; background: transparent; padding: 6px 0; font-size: 0.75rem; font-weight: 600; color: var(--sub); cursor: pointer; border-radius: 7px; transition: 0.2s; }
+        .time-btn.active { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .chart-footer { margin-top: 15px; text-align: center; font-size: 0.7rem; color: var(--sub); font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card level-NORMAL" id="mainCard">
+            <div class="header">
+                <div class="title">Plant Monitor</div>
+                <div class="status-pill">
+                    <div id="dot" class="dot"></div>
+                    <span id="conn">Wait...</span>
+                    <span id="latency" class="latency-msg"></span>
+                </div>
+            </div>
+            <div id="guardMsg" class="msg-box">Loading...</div>
+            <div class="main-display">
+                <div class="temp-group"><span id="temp" class="temp-val">--</span><span class="unit">°C</span></div>
+                <div class="extremes-stack">
+                    <div class="ex-item"><span class="ex-label">MAX</span><span id="max24" class="ex-val max-txt">--</span></div>
+                    <div class="ex-item"><span class="ex-label">MIN</span><span id="min24" class="ex-val min-txt">--</span></div>
+                </div>
+            </div>
+            <div class="footer-grid">
+                <div class="stat-item"><span class="stat-lbl">Humidity</span><span class="stat-val"><span id="humi">--</span>%</span></div>
+                <div class="stat-item"><span class="stat-lbl">Daily Swing</span><span class="stat-val" id="swing24">--</span></div>
+            </div>
+        </div>
+        <div class="chart-box">
+            <div class="time-controls">
+                <button onclick="changeRange('1h', this)" class="time-btn active">1H</button>
+                <button onclick="changeRange('6h', this)" class="time-btn">6H</button>
+                <button onclick="changeRange('12h', this)" class="time-btn">12H</button>
+                <button onclick="changeRange('24h', this)" class="time-btn">24H</button>
+                <button onclick="changeRange('7d', this)" class="time-btn">7D</button>
+            </div>
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+            <div class="chart-footer">Run Time: <span id="uptime">0m</span></div>
+        </div>
+    </div>
+    <script>
+        let chart; let currentRange = '1h'; let lastTs = 0;
+        window.onload = function() { initChart(); loop(); setInterval(updateLatency, 1000); };
+        
+        function updateLatency() {
+            if(lastTs === 0) return;
+            const sec = Math.floor((Date.now()/1000) - lastTs);
+            const el = document.getElementById('latency');
+            el.innerText = sec + "s ago";
+            if(sec > 10) el.style.color = '#e74c3c'; else el.style.color = '#888';
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('chart').getContext('2d');
+            
+            const annotations = {
+                dangerLine: {
+                    type: 'line', yMin: 28, yMax: 28, borderColor: '#e74c3c', borderWidth: 1.5, borderDash: [6, 4],
+                    // ★ 關鍵修正：不影響縮放範圍
+                    adjustScaleRange: false,
+                    label: { display: true, content: 'Danger (28°C)', position: 'start', color: '#e74c3c', font: { size: 10 }, backgroundColor: 'rgba(0,0,0,0.5)' }
+                },
+                warnLine: {
+                    type: 'line', yMin: 25, yMax: 25, borderColor: '#f1c40f', borderWidth: 1.5, borderDash: [6, 4],
+                    // ★ 關鍵修正：不影響縮放範圍
+                    adjustScaleRange: false,
+                    label: { display: true, content: 'Warning (25°C)', position: 'start', color: '#f1c40f', font: { size: 10 }, backgroundColor: 'rgba(0,0,0,0.5)' }
+                },
+                coldLine: {
+                    type: 'line', yMin: 20, yMax: 20, borderColor: '#3498db', borderWidth: 1.5, borderDash: [6, 4],
+                    // ★ 關鍵修正：不影響縮放範圍
+                    adjustScaleRange: false,
+                    label: { display: true, content: 'Cold (20°C)', position: 'start', color: '#3498db', font: { size: 10 }, backgroundColor: 'rgba(0,0,0,0.5)' }
+                }
+            };
+
+            chart = new Chart(ctx, { 
+                type: 'line', 
+                data: { labels: [], datasets: [{ 
+                    label: 'Temp', 
+                    data: [], 
+                    borderColor: '#ffffff', 
+                    borderWidth: 2.5, 
+                    pointRadius: 0, 
+                    cubicInterpolationMode: 'monotone', 
+                    fill: false 
+                }] }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false },
+                        annotation: { 
+                            // 允許線條畫在圖表區之外 (才不會被切斷，但不會強迫縮放)
+                            clip: false,
+                            annotations: annotations 
+                        }
+                    }, 
+                    animation: false, 
+                    scales: { 
+                        x: { 
+                            display: true, 
+                            grid: { display: false }, 
+                            ticks: { color: '#888', font: { size: 9 }, maxTicksLimit: 6, maxRotation: 0 } 
+                        }, 
+                        y: { 
+                            // 自動縮放，上下各留 30% 緩衝空間，讓線條在中間漂亮波動
+                            grace: '30%',
+                            grid: { color: 'rgba(255,255,255,0.08)' }, 
+                            ticks: { color: '#888', font: { size: 10 } } 
+                        } 
+                    } 
+                } 
+            });
+        }
+
+        async function loop() {
+            try {
+                const res = await fetch('/api/live?t=' + new Date().getTime()); const data = await res.json();
+                
+                document.getElementById('temp').innerText = data.temp;
+                document.getElementById('humi').innerText = data.humi;
+                document.getElementById('guardMsg').innerText = data.guard_msg;
+                document.getElementById('max24').innerText = data.max_24h;
+                document.getElementById('min24').innerText = data.min_24h;
+                document.getElementById('uptime').innerText = data.uptime;
+                
+                if(data.ts) lastTs = data.ts;
+
+                const swingElem = document.getElementById('swing24');
+                swingElem.innerText = data.swing_24h + (data.swing_24h !== '--' ? '°C' : '');
+                swingElem.style.color = '#fff';
+
+                const dot = document.getElementById('dot');
+                if(data.status === "Online") { dot.classList.add('online'); document.getElementById('conn').innerText="Online"; } else { dot.classList.remove('online'); document.getElementById('conn').innerText=data.status; }
+                
+                const card = document.getElementById('mainCard');
+                const lvl = data.guard_level || 'GOOD';
+                card.className = `card level-${lvl}`;
+                
+                await updateChart(false);
+
+            } catch(e) {}
+            setTimeout(loop, 3000);
+        }
+
+        async function updateChart(forceRedraw = false) {
+            try {
+                const hRes = await fetch(`/api/history?range=${currentRange}&t=` + new Date().getTime()); const hData = await hRes.json();
+                if(chart) { 
+                    chart.data.labels = hData.labels; 
+                    chart.data.datasets[0].data = hData.temp; 
+                    if (forceRedraw) { chart.update(); } else { chart.update('none'); }
+                }
+            } catch(e) {}
+        }
+
+        function changeRange(range, btn) { 
+            currentRange = range; 
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active')); 
+            btn.classList.add('active'); 
+            updateChart(true); 
+        }
+    </script>
+</body>
+</html>
