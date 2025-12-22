@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌿 IoT Plant Monitor
+# 🌿 IoT Plant Monitor ─ BOTANIC
 ### High-Precision Environmental Monitoring System
 
 [![GitHub release](https://img.shields.io/badge/Release-v8.5-brightgreen.svg)](https://github.com/YCL-Jeff/)
@@ -22,10 +22,9 @@ This specialized monitoring system is designed for plant and mycelium cultivatio
 
 ### 📸 Showcase
 <div align="center">
-  <img src="[https://github.com/user-attachments/assets/6b92442b-0374-4126-8c31-e09fd3fb095b" alt="Plant Monitor Dashboard Preview" width="800">
+  <img src="https://github.com/user-attachments/assets/409fec77-cf11-4398-8f25-260af3fc9a30" alt="Plant Monitor Dashboard Preview" width="380">
   <p><em>Dynamic UI color shifts, real-time latency detection, and multi-timeframe trend charts.</em></p>
 </div>
-![IMG_7698](https://github.com/user-attachments/assets/6b92442b-0374-4126-8c31-e09fd3fb095b)
 
 
 ### ✨ Key Features
