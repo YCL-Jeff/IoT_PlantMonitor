@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="color-scheme" content="dark">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Plant Monitor v9.3</title>
+    <title>Plant Monitor v9.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,25 +12,24 @@
 
     <style>
         :root { 
-            --bg: #0f0f11; 
-            --card-bg: rgba(255, 255, 255, 0.03);
+            --bg: #000000; 
+            --card-bg: rgba(30, 30, 35, 0.4);
             --text: #ffffff; 
             --sub: #9ca3af;
             
             /* 狀態色票 */
-            --c-blue:   #38bdf8; /* <20 */
-            --c-green:  #4ade80; /* 20-25 */
-            --c-yellow: #facc15; /* 25-28 */
-            --c-red:    #f87171; /* >28 */
+            --c-blue:   #38bdf8; 
+            --c-green:  #4ade80; 
+            --c-yellow: #facc15; 
+            --c-red:    #f87171; 
             
-            /* 圖表主線顏色 (電光紫 - 與狀態色區隔) */
-            --c-chart-line: #c084fc; 
-            --c-chart-fill: rgba(192, 132, 252, 0.15);
+            /* 圖表主題色 */
+            --c-chart-line: #4ade80; 
         }
         
         body { 
             font-family: 'Inter', -apple-system, sans-serif; 
-            background: radial-gradient(circle at 50% 0%, #1e1e24 0%, var(--bg) 100%); 
+            background: radial-gradient(circle at 50% 0%, #1a1a20 0%, #000000 100%); 
             color: var(--text); 
             margin: 0; 
             padding: 20px; 
@@ -41,80 +41,104 @@
 
         /* --- 主卡片設計 --- */
         .card { 
-            border-radius: 28px; 
-            padding: 30px; 
+            border-radius: 26px; 
+            /* ★ 黃金比例內距：28px (比上次大，比上上次小) ★ */
+            padding: 28px 30px; 
             position: relative; 
-            margin-bottom: 24px; 
-            background: var(--card-bg); 
+            margin-bottom: 20px; 
+            background: rgba(255, 255, 255, 0.02); 
             border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(12px); 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            /* 強效毛玻璃 */
+            backdrop-filter: blur(20px) saturate(180%); 
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
         }
 
-        /* 狀態邊框與光暈 */
-        .card.level-FREEZE, .card.level-COLD { border-color: var(--c-blue); box-shadow: 0 0 40px rgba(56, 189, 248, 0.15); }
-        .card.level-FREEZE .temp-val, .card.level-COLD .temp-val { text-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
-
-        .card.level-BEST, .card.level-GOOD { border-color: var(--c-green); box-shadow: 0 0 40px rgba(74, 222, 128, 0.15); }
-        .card.level-BEST .temp-val, .card.level-GOOD .temp-val { text-shadow: 0 0 20px rgba(74, 222, 128, 0.4); }
-
-        .card.level-WARN { border-color: var(--c-yellow); box-shadow: 0 0 40px rgba(250, 204, 21, 0.15); animation: breathe 3s infinite; }
-        .card.level-WARN .temp-val { text-shadow: 0 0 20px rgba(250, 204, 21, 0.4); }
-
-        .card.level-DANGER { border-color: var(--c-red); box-shadow: 0 0 50px rgba(248, 113, 113, 0.25); animation: pulse 1s infinite; }
-        .card.level-DANGER .temp-val { text-shadow: 0 0 30px rgba(248, 113, 113, 0.6); }
+        /* 狀態光暈 */
+        .card.level-FREEZE, .card.level-COLD { border-color: var(--c-blue); box-shadow: 0 0 35px rgba(56, 189, 248, 0.15); }
+        .card.level-BEST, .card.level-GOOD { border-color: var(--c-green); box-shadow: 0 0 35px rgba(74, 222, 128, 0.15); }
+        .card.level-WARN { border-color: var(--c-yellow); box-shadow: 0 0 35px rgba(250, 204, 21, 0.15); animation: breathe 3s infinite; }
+        .card.level-DANGER { border-color: var(--c-red); box-shadow: 0 0 45px rgba(248, 113, 113, 0.25); animation: pulse 1s infinite; }
         
         @keyframes breathe { 0%, 100% { border-color: var(--c-yellow); opacity: 1; } 50% { border-color: rgba(250, 204, 21, 0.5); opacity: 0.9; } }
         @keyframes pulse { 0%, 100% { transform: scale(1); border-color: var(--c-red); } 50% { transform: scale(1.01); border-color: rgba(248, 113, 113, 0.6); } }
 
-        /* --- Header & Status --- */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .title { font-weight: 800; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sub); }
+        /* --- Header --- */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .title { font-weight: 800; font-size: 0.75rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--sub); opacity: 0.8; }
         .status-pill { 
-            background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 20px; 
-            font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 14px; 
+            font-size: 0.7rem; font-weight: 600; display: flex; align-items: center; gap: 6px; 
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: #444; transition: 0.3s; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #444; }
         .dot.online { background: var(--c-green); box-shadow: 0 0 6px var(--c-green); }
-        .latency-msg { color: #666; font-weight: 400; margin-left: 4px; }
+        .latency-msg { color: #666; font-weight: 400; margin-left: 2px; }
 
-        /* --- Main Temperature --- */
-        .main-display { text-align: center; margin: 10px 0 30px 0; }
-        .temp-wrapper { display: inline-flex; align-items: flex-start; justify-content: center; }
-        .temp-val { font-size: 6rem; font-weight: 700; line-height: 1; letter-spacing: -3px; color: #fff; transition: color 0.3s; }
-        .unit { font-size: 1.5rem; font-weight: 500; color: var(--sub); margin-top: 10px; margin-left: 4px; }
-        .guard-msg { font-size: 0.9rem; color: var(--sub); margin-top: 8px; font-weight: 500; letter-spacing: 0.5px; }
-
-        /* --- Info Grid (4格排版) --- */
-        .info-grid { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; 
-            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+        /* --- Main Layout --- */
+        .main-display { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 30px; 
+            margin: 15px 0 25px 0; 
         }
-        .info-item { display: flex; flex-direction: column; align-items: center; padding: 5px; }
-        .info-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: var(--sub); margin-bottom: 4px; }
+
+        .temp-wrapper { display: flex; align-items: flex-start; }
+        /* ★ 字體調整：5.6rem (適中大小) ★ */
+        .temp-val { font-size: 5.6rem; font-weight: 800; line-height: 0.9; letter-spacing: -2px; color: #fff; }
+        .unit { font-size: 1.6rem; font-weight: 500; color: var(--sub); margin-top: 8px; margin-left: 5px; }
+
+        /* 右側 Max/Min */
+        .extremes-col { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            padding-left: 25px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        .ex-item { display: flex; flex-direction: column; align-items: flex-start; }
+        .ex-label { font-size: 0.65rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .ex-val { font-size: 1.2rem; font-weight: 700; }
+        .val-max { color: var(--c-red); }
+        .val-min { color: var(--c-blue); }
+        /* 新增：給 JS 控制 Swing 顏色用的 class */
+        .val-warn { color: var(--c-yellow); }
+        .val-safe { color: var(--c-green); }
+
+        .guard-msg { text-align: center; font-size: 0.9rem; color: var(--sub); margin-bottom: 25px; font-weight: 500; letter-spacing: 0.3px; min-height: 1.2em;}
+
+        /* --- Bottom Stats (Grid) --- */
+        .info-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+        }
+        .info-item { display: flex; flex-direction: column; align-items: center; }
+        .info-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--sub); margin-bottom: 4px; }
         .info-value { font-size: 1.1rem; font-weight: 600; color: #fff; }
-        .val-danger { color: var(--c-red); } .val-cold { color: var(--c-blue); }
 
         /* --- Chart Section --- */
         .chart-card { 
-            background: var(--card-bg); border-radius: 28px; padding: 20px; 
+            background: var(--card-bg); border-radius: 26px; padding: 20px; 
             border: 1px solid rgba(255,255,255,0.05); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         }
         
         .time-controls { 
-            display: flex; justify-content: space-between; background: rgba(0, 0, 0, 0.3); 
-            padding: 4px; border-radius: 12px; margin-bottom: 20px; 
+            display: flex; justify-content: space-between; background: rgba(0, 0, 0, 0.4); 
+            padding: 4px; border-radius: 12px; margin-bottom: 15px; 
         }
         .time-btn { 
-            flex: 1; border: none; background: transparent; padding: 8px 0; 
+            flex: 1; border: none; background: transparent; padding: 7px 0; 
             font-size: 0.75rem; font-weight: 600; color: #666; cursor: pointer; 
             border-radius: 8px; transition: 0.2s; 
         }
-        .time-btn.active { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        .time-btn.active { background: rgba(255, 255, 255, 0.15); color: #fff; }
         
-        .chart-container { position: relative; height: 280px; width: 100%; }
-        .footer-info { text-align: center; margin-top: 20px; font-size: 0.7rem; color: #444; }
+        .chart-container { position: relative; height: 260px; width: 100%; }
+        .footer-info { text-align: center; margin-top: 15px; font-size: 0.7rem; color: #444; }
     </style>
 </head>
 <body>
@@ -122,7 +146,7 @@
         
         <div class="card level-NORMAL" id="mainCard">
             <div class="header">
-                <div class="title">Monitor v9.3</div>
+                <div class="title">Monitor v9.5</div>
                 <div class="status-pill">
                     <div id="dot" class="dot"></div>
                     <span id="conn">Wait...</span>
@@ -135,8 +159,20 @@
                     <span id="temp" class="temp-val">--</span>
                     <span class="unit">°C</span>
                 </div>
-                <div id="guardMsg" class="guard-msg">System Initializing...</div>
+                
+                <div class="extremes-col">
+                    <div class="ex-item">
+                        <span class="ex-label">Max 24h</span>
+                        <span id="max24" class="ex-val val-max">--</span>
+                    </div>
+                    <div class="ex-item">
+                        <span class="ex-label">Min 24h</span>
+                        <span id="min24" class="ex-val val-min">--</span>
+                    </div>
+                </div>
             </div>
+
+            <div id="guardMsg" class="guard-msg">System Initializing...</div>
 
             <div class="info-grid">
                 <div class="info-item">
@@ -146,14 +182,6 @@
                 <div class="info-item">
                     <span class="info-label">Daily Swing</span>
                     <span class="info-value" id="swing24">--</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Max (24h)</span>
-                    <span class="info-value val-danger" id="max24">--</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Min (24h)</span>
-                    <span class="info-value val-cold" id="min24">--</span>
                 </div>
             </div>
         </div>
@@ -189,10 +217,9 @@
         function initChart() {
             const ctx = document.getElementById('chart').getContext('2d');
             
-            // 建立漸層填充色
             let gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(192, 132, 252, 0.25)'); // 上方深紫
-            gradient.addColorStop(1, 'rgba(192, 132, 252, 0.0)');  // 下方透明
+            gradient.addColorStop(0, 'rgba(74, 222, 128, 0.2)'); 
+            gradient.addColorStop(1, 'rgba(74, 222, 128, 0.0)');
 
             const annotations = {
                 dangerLine: {
@@ -214,13 +241,10 @@
                 data: { labels: [], datasets: [{ 
                     label: 'Temp', 
                     data: [], 
-                    // ★ 曲線顏色：電光紫 ★
-                    borderColor: '#c084fc', 
-                    borderWidth: 3, 
-                    // ★ 平滑曲線 ★
+                    borderColor: '#4ade80', 
+                    borderWidth: 2.5, 
                     tension: 0.4, 
                     pointRadius: 0, 
-                    // ★ 漸層填充 ★
                     backgroundColor: gradient,
                     fill: true 
                 }] }, 
@@ -239,7 +263,6 @@
                             ticks: { color: '#666', font: { size: 10 }, maxTicksLimit: 5, maxRotation: 0 } 
                         }, 
                         y: { 
-                            // 自動縮放，線條留白，不被虛線綁架
                             grace: '20%',
                             grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }, 
                             ticks: { color: '#666', font: { size: 10 } } 
@@ -262,10 +285,19 @@
                 
                 if(data.ts) lastTs = data.ts;
 
+                // ★ Daily Swing 顏色邏輯 ★
                 const swingElem = document.getElementById('swing24');
                 swingElem.innerText = data.swing_24h + (data.swing_24h !== '--' ? '°C' : '');
-                if(data.swing_24h !== '--' && parseFloat(data.swing_24h) > 5) swingElem.style.color = '#facc15';
-                else swingElem.style.color = '#fff';
+                
+                // 先移除所有顏色 class
+                swingElem.classList.remove('val-safe', 'val-warn', 'val-max');
+                
+                if(data.swing_24h !== '--') {
+                    let s = parseFloat(data.swing_24h);
+                    if(s > 10.0) swingElem.classList.add('val-max');       // 紅色
+                    else if(s > 5.0) swingElem.classList.add('val-warn');  // 黃色
+                    else swingElem.classList.add('val-safe');              // 綠色 (穩定)
+                }
 
                 const dot = document.getElementById('dot');
                 if(data.status === "Online") { dot.classList.add('online'); document.getElementById('conn').innerText="Online"; } else { dot.classList.remove('online'); document.getElementById('conn').innerText=data.status; }
