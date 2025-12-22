@@ -22,9 +22,11 @@ This specialized monitoring system is designed for plant and mycelium cultivatio
 
 ### 📸 Showcase
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/a669b270-cf96-4f16-8d8b-b727d93cb76f" alt="Plant Monitor Dashboard Preview" width="800">
+  <img src="[https://github.com/user-attachments/assets/6b92442b-0374-4126-8c31-e09fd3fb095b" alt="Plant Monitor Dashboard Preview" width="800">
   <p><em>Dynamic UI color shifts, real-time latency detection, and multi-timeframe trend charts.</em></p>
 </div>
+![IMG_7698](https://github.com/user-attachments/assets/6b92442b-0374-4126-8c31-e09fd3fb095b)
+
 
 ### ✨ Key Features
 * **🚀 Extreme Performance**: SQLite **WAL Mode** for concurrent R/W; Multi-threaded architecture ensures 0 data loss even during heavy stats processing.
