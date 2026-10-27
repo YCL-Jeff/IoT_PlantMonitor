@@ -3,7 +3,7 @@
 # 🌿 IoT Plant Monitor ─ BOTANIC
 ### High-Precision Environmental Monitoring System
 
-[![GitHub release](https://img.shields.io/badge/Release-v8.5-brightgreen.svg)](https://github.com/YCL-Jeff/)
+[![Version](https://img.shields.io/badge/Version-v8.5-brightgreen.svg)](https://github.com/YCL-Jeff/IoT_PlantMonitor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
@@ -23,14 +23,14 @@ This specialized monitoring system is designed for high-precision plant cultivat
 ### 📸 Showcase
 <div align="center">
   <img src="https://github.com/user-attachments/assets/409fec77-cf11-4398-8f25-260af3fc9a30" alt="Plant Monitor Dashboard Preview" width="380">
-  <p><em>Dynamic UI color shifts, real-time latency detection, and multi-timeframe trend charts.</em></p>
+  <p><em>Dynamic UI colour shifts, real-time latency detection, and multi-timeframe trend charts.</em></p>
 </div>
 
 
 ### ✨ Key Features
 * **🚀 Extreme Performance**: SQLite **WAL Mode** for concurrent R/W; Multi-threaded architecture ensures 0 data loss even during heavy stats processing.
 * **🧠 Smart Algorithms**: Built-in **EWMA Filter** (Alpha 0.5) for noise reduction; **Adaptive Logging** triggers immediate writes during rapid temp shifts (>0.2°C).
-* **🎨 Interactive UI**: Modern Glassmorphism design with auto-background color shifts and live data "age" tracking (`2s ago`).
+* **🎨 Interactive UI**: Modern Glassmorphism design with auto-background colour shifts and live data "age" tracking (`2s ago`).
 
 ### 🔌 Hardware Setup
 1. **Wiring**: Connect DHT22/AHT10 DATA to ESP32 **GPIO 4**, along with VCC/GND.
@@ -42,9 +42,18 @@ This specialized monitoring system is designed for high-precision plant cultivat
 3. **Run**: `python server.py` (On Mac, use `caffeinate -i python server.py` to prevent sleep).
 
 ### 🌐 Remote Access (Cloudflare Tunnel)
-Bypass firewalls and monitor your plants from anywhere:
+Monitor your plants from anywhere without opening router ports:
 
+```bash
 cloudflared tunnel --protocol http2 --url http://localhost:5555
+```
+
+### 🌡️ Temperature-change alerts (optional)
+`monitor_csv.py` watches a CSV log (`temp.csv`, one sample every 5 s) and prints `[WARN]` / `[ALERT]` messages when the temperature jumps or drifts too fast over 5 s, 15 s, 1 min or 3 min windows. The thresholds are at the top of the file.
+
+```bash
+python monitor_csv.py
+```
 
 <a name="繁體中文"></a>
 
@@ -53,7 +62,7 @@ cloudflared tunnel --protocol http2 --url http://localhost:5555
 # 🌿 IoT Plant Monitor ─ BOTANIC
 ### 高精度植物環境監控系統
 
-[![GitHub release](https://img.shields.io/badge/Release-v8.5-brightgreen.svg)](https://github.com/YCL-Jeff/)
+[![Version](https://img.shields.io/badge/Version-v8.5-brightgreen.svg)](https://github.com/YCL-Jeff/IoT_PlantMonitor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
@@ -81,19 +90,31 @@ cloudflared tunnel --protocol http2 --url http://localhost:5555
 2. **韌體燒錄**：使用 Arduino IDE 將 `firmware/` 資料夾內的程式碼燒錄至 ESP32。
 
 ### 💻 軟體安裝與執行
-1. **安裝依賴套件**：
-   ```bash
-   pip install -r requirements.txt
+1. **安裝依賴套件**：`pip install -r requirements.txt`
+2. **設定序列埠**：修改 `server.py` 中的 `SERIAL_PORT`（例如 `COM3` 或 `/dev/cu.usbserial-xxx`）。
+3. **啟動**：`python server.py`，瀏覽器開啟 `http://localhost:5555`（Mac 可用 `caffeinate -i python server.py` 防止休眠）。
 
-```text
-
-.
-├── firmware/          # ESP32 Firmware (C++)
-├── server.py          # Python Core (Flask + SQLite)
-├── requirements.txt   # Dependencies List
-├── .gitignore         # Git ignore rules (Excluded venv & db)
-└── README.md          # Documentation
+### 🌐 遠端存取
+```bash
+cloudflared tunnel --protocol http2 --url http://localhost:5555
 ```
 
-📝 License
-Distributed under the MIT License. See LICENSE for more information.
+### 🌡️ 溫度變化警示（選用）
+`monitor_csv.py` 監看 CSV 記錄檔（`temp.csv`，每 5 秒一筆），在 5 秒、15 秒、1 分鐘或 3 分鐘內溫度變化過快時輸出 `[WARN]` / `[ALERT]`。門檻值在檔案開頭設定。
+
+---
+
+## 📁 Project Structure
+
+```text
+.
+├── firmware/main.ino  # ESP32 firmware (Arduino, DHT22 on GPIO 4, 115200 baud)
+├── templates/         # Dashboard page (index.html)
+├── server.py          # Flask + SQLite server
+├── monitor_csv.py     # Optional temperature-change alert script
+├── requirements.txt   # Python dependencies
+└── .gitignore         # Excludes venv and database
+```
+
+## 📝 Licence
+Distributed under the MIT Licence. See [LICENSE](LICENSE).
